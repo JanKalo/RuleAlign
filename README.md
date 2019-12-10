@@ -52,7 +52,7 @@ with open(amie_output_fn, "r") as f:
 ### amie\_synonyms.py
 
 This module implements our approach as described in the paper.
-It takes the output **AMIE+** as input and produces a dictionary of relation pairs with its confidence in being synonym in the same directory where the **AMIE+** output is located in.
+It takes the output from **AMIE+** as input and produces a dictionary of relation pairs with their confidences in being synonym in the same directory where the **AMIE+** output is located in.
 Currently, it also requires the `relation2id.txt` mapping from the benchmark as input for parallelization.
 
 For usage details and more options, see:
@@ -64,7 +64,7 @@ $ python3 amie_synonyms.py -h
 # evaluate\_synonyms.py
 
 This module contains code for classification and evaluation of the results produced by `amie_synonyms.py`.
-It will produce precision-recall or precision@topK plots (depending on application) in the same directory where the input is located in.
+It will produce precision-recall or precision@topK plots (depending on the experiment) in the same directory where the input is located in.
 Currently, it also requires the `relation2id.txt` mapping from the benchmark as input for parallelization.
 
 For usage details and more options, see:
@@ -78,8 +78,8 @@ $ python3 evaluate_synonyms.py -h
 The procedure for each experiment given a benchmark \(B\) consists of three steps:
 
 1. Mining association rules using **AMIE+** with \(B\) as input, producing the rules as output.
-2. Calculating synonymous relationship pairs with their confidences using our approach.
-3. Classifying, evaluating and plotting precision-recall or precision@topK plots for the experiment.
+2. Calculating synonymous relationship pairs with their confidences using our approach with the rules as input.
+3. Classifying, evaluating and plotting precision-recall or precision@topK plots for the experiment using the list calculated in the previous step.
 
 For each experiment, we provide the exact shell commands for each step to reproduce our results.
 
