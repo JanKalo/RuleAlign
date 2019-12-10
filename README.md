@@ -87,6 +87,8 @@ For each experiment, we provide the exact shell commands for each step to reprod
 
 We focused on the Wikidata and DBpedia datasets of our [previous work][3] for evaluation to extend our pool of baselines.
 See the paper / repository for details on the samples.
+The rules used for the experiments are available here: https://cloudstorage.tu-braunschweig.de/public?folderID=MjRQc2FHd3VYUThuWEQ5V3E2am1p
+The gold datasets for the evaluation are also available for download: https://doi.org/10.6084/m9.figshare.11343785.v1
 
 ### Precision-Recall Evaluation in Wikidata
 
