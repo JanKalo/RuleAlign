@@ -145,17 +145,20 @@ def evaluate_simple(
         relation2id=None,
         relation2uri=None
         ):
-    precision_x_values = {}
+    precision_and_synonyms = {}
     for threshold in threshold_range:
         classified_synonyms = classify_synonyms_simple(
                 synonyms_dict,
                 threshold
                 )
-        precision_x_values[threshold] = precision_func(
-                synonyms_gold,
-                classified_synonyms
-                )
-    return precision_x_values
+        precision_and_synonyms[threshold] = {
+                "precision_x": precision_func(
+                    synonyms_gold,
+                    classified_synonyms
+                    ),
+                "synonyms": classified_synonyms
+                }
+    return precision_and_synonyms
 
 
 def evaluate_outlier(
@@ -167,18 +170,21 @@ def evaluate_outlier(
         relation2uri
         ):
     similarity_matrix = build_similarity_matrix(synonyms_dict, relation2id)
-    precision_x_values = {}
+    precision_and_synonyms = {}
     for threshold in threshold_range:
         classified_synonyms = classify_synonyms_outlier(
                 similarity_matrix,
                 threshold,
                 relation2uri
                 )
-        precision_x_values[threshold] = precision_func(
-                synonyms_gold,
-                classified_synonyms
-                )
-    return precision_x_values
+        precision_and_synonyms[threshold] = {
+                "precision_x": precision_func(
+                    synonyms_gold,
+                    classified_synonyms
+                    ),
+                "synonyms": classified_synonyms
+                }
+    return precision_and_synonyms
 
 
 def evaluate_affinity(
@@ -236,10 +242,10 @@ def plot_finish(plot_fn):
     plt.savefig(plot_fn, bbox_inches="tight")
 
 
-def plot_precision(precision_x_values, topk=None, title=""):
+def plot_precision(precision_x, topk=None, title=""):
     print("INFO: plotting precision values")
-    precision_values = list(map(lambda x: x[0], precision_x_values))
-    x_values = list(map(lambda x: x[1], precision_x_values))
+    precision_values = list(map(lambda x: x[0], precision_x))
+    x_values = list(map(lambda x: x[1], precision_x))
     plt.plot(x_values, precision_values, label="RuleAlign", color="r")
 
 
@@ -328,7 +334,14 @@ def main():
                 "ERROR: specified synonyms dictionary "
                 "file to evaluate does not exist"
                 )
-    plot_fn = os.path.join(os.path.dirname(args.synonyms_dict), "{0}_{1}.pdf")
+    eval_dir = os.path.join(os.path.dirname(args.synonyms_dict), "evaluation")
+    if not os.path.isdir(eval_dir):
+        os.mkdir(eval_dir)
+    synonyms_fn = os.path.join(eval_dir, "synonyms_{0:.4f}.txt")
+    precision_x_fn = os.path.join(eval_dir, "{0}.txt")
+    precision_x_fn = precision_x_fn.format(args.precision_func)
+    plot_fn = os.path.join(eval_dir, "{0}_{1}.pdf")
+    plot_fn = plot_fn.format(args.precision_func, args.classifier)
 
     # load relation2id mapping
     relation2id, relation2uri = load_relation_mapping(args.relation2id)
@@ -386,14 +399,37 @@ def main():
 
     # combine results
     results = list(map(lambda x: x.get(), results))
-    precision_dict = {
+    # the following dicts' keys are the thresholds we considered
+    # and the values are dicts with "precision_x" and "synonyms" keys
+    precision_and_synonyms = {
             k: v
             for result in results
             for k, v in result.items()
             }
-    precision_x_values = list(map(
-        lambda x: precision_dict[x], sorted(precision_dict)
+
+    # save synonyms for each threshold in evaluation folder
+    for threshold in precision_and_synonyms:
+        with open(synonyms_fn.format(threshold), "w") as f:
+            f.write("{0}\n".format(
+                len(precision_and_synonyms[threshold]["synonyms"])
+                ))
+            for synonym in precision_and_synonyms[threshold]["synonyms"]:
+                it = iter(synonym)
+                r1 = next(it)
+                r2 = next(it)
+                f.write("{0}\t{1}\n".format(r1, r2))
+
+    # sort results by thresholds and get only the precision_x values
+    # for plotting
+    precision_x = list(map(
+        lambda x: precision_and_synonyms[x]["precision_x"],
+        sorted(precision_and_synonyms)
         ))
+
+    # save precision_x values
+    with open(precision_x_fn, "w") as f:
+        for values in precision_x:
+            f.write("{0}\t{1}\n".format(values[0], values[1]))
 
     # prepare plotting
     plot_prepare(topk)
@@ -403,6 +439,7 @@ def main():
         # set plotting range for topk to 500
         # as the baselines only went to top 500
         plt.xlim((0.0, 1.0) if not topk else (0, 500))
+        # plt.xlim((0.0, 1.0) if not topk else (0, topk))
 
         # get filenames of precision values
         transh_fn = os.path.join(args.baseline_dir, "transh.txt")
@@ -423,10 +460,9 @@ def main():
         plot_baseline(freqitemset_fn, "Freq. Item Set", "#000000")
 
     # plot precision
-    plot_precision(precision_x_values)
+    plot_precision(precision_x)
 
     # save plot
-    plot_fn = plot_fn.format(args.precision_func, args.classifier)
     plot_finish(plot_fn)
 
 
