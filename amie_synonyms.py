@@ -91,7 +91,7 @@ class Config(object):
                 not self._weight_pca and
                 not self._weight_hc
                 ):
-            weight_name += "none"
+            weight_name += "-none"
 
         # get normalization name
         normalization_name = "norm-"

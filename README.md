@@ -61,7 +61,7 @@ For usage details and more options, see:
 $ python3 amie_synonyms.py -h
 ```
 
-# evaluate\_synonyms.py
+### evaluate\_synonyms.py
 
 This module contains code for classification and evaluation of the results produced by `amie_synonyms.py`.
 It will produce precision-recall or precision@topK plots (depending on the experiment) in the same directory where the input is located in.
